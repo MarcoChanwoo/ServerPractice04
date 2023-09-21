@@ -17,6 +17,13 @@ UserSchema.methods.checkPassword = async function (password) {
     const result = await bcrypt.compare(password, this.hashedPassword);
     return result; // true / false
 };
+// serialize라는 인스턴스 함수로 만듦; hashedPassword 필드가 응답되지 않도록 데이터를 JSON으로 변환한 다음
+// delete를 통해 해당 필드를 지웠음. 자주 이용되므로 인스턴스로 제작함
+UserSchema.methods.serialize = function () {
+    const data = this.toJSON();
+    delete data.hashedPassword;
+    return data;
+};
 
 // 스태틱 메서드: findByUsername 메서드를 통해 username으로 데이터를 찾게 함
 UserSchema.statics.findByUsername = function (username) {
