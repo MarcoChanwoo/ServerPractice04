@@ -73,7 +73,8 @@ export const write = async (ctx) => {
 };
 
 /*
-    GET /api/posts
+    GET /api/posts?username=&tag=&page=
+    username/tags로 포스트를 filtering함
 */
 export const list = async (ctx) => {
     // query는 문자열이므로 숫자로 변환해야 함
@@ -83,13 +84,20 @@ export const list = async (ctx) => {
         ctx.status = 400;
         return;
     }
+    const { tag, username } = ctx.query;
+    // tag, username 값이 유효하면 객체 안으로 넣고, 아님 넣지않음
+    const query = {
+        ...Joi(username ? { 'user.username': username } : {}),
+        ...Joi(tag ? { tags: tag } : {}),
+    };
+
     try {
-        const posts = await Post.find()
+        const posts = await Post.find(query)
             .sort({ _id: -1 })
             .limit(10)
             .skip((page - 1) * 10)
             .exec();
-        const postCount = await Post.countDocuments().exec();
+        const postCount = await Post.countDocuments(query).exec();
         ctx.set('Last-Page', Math.ceil(postCount / 10));
         ctx.body = posts
             .map((post) => post.toJSON())
